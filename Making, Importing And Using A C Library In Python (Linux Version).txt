@@ -1,0 +1,64 @@
+test.c
+
+#include <stdlib.h>
+#include <time.h>
+
+#define TRUE  1
+#define FALSE 0
+
+static int randomized = FALSE;
+
+void randomize(void)
+{
+  srand(time(NULL));
+  randomized = TRUE;
+}
+
+/* returns a random number between base and max, inclusive */
+int get_random(int base, int max)
+{
+  if (randomized == FALSE){
+    randomize();
+  }
+  return rand() % (max - base + 1) + base;
+}
+
+
+Well-- there we have it. We have the C code, but we need to create a library (in Linux, a .so file).
+We can do so by compiling our code and outputting a shared library.
+For example, here is how you can do it with GCC:
+
+
+gcc -Wall -O3 -shared ~/test.c -o test.so
+
+
+This turns on warning, optimizes the code and exports the test code as a file called, 'test.so'
+into our home directory. The shared flag is what outputs the shared library.
+
+Finally, we need to use this in our Python script. The first thing we want to do is import the ctypes module. 
+
+import ctypes
+
+Next we need to load our library, in Linux we will do it like so (no pun intended):
+
+my_test_lib = ctypes.cdll.LoadLibrary('/home/username/test.so')
+
+Then you can call functions inside your library by calling them through the library object, like this:
+
+my_test_lib.get_random(1, 10)
+
+Here's the complete source for the test Python code I wrote.
+
+#!/usr/bin/env python
+
+import ctypes
+
+def main():
+    my_test_lib = ctypes.cdll.LoadLibrary('/home/usrname/test.so')
+    for i in range(10):
+        # Note, this uses the Python 2 print 
+        print "Random = %d" % my_test_lib.get_random(1, 10)
+
+if __name__ == '__main__':
+    main()
+
